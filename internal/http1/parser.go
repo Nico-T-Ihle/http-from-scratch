@@ -110,7 +110,7 @@ func parseBody(headers http.Header, reader *bufio.Reader) (io.ReadCloser, int64,
 	} else if len(contentLengthStr) > 0 {
 		contentLengthIntValue, err := strconv.Atoi(contentLengthStr)
 		if err != nil {
-			panic(err)
+			fmt.Errorf(err.Error())
 		}
 
 		contentLength, err := strconv.ParseInt(contentLengthStr, 10, 64)
@@ -128,3 +128,6 @@ func parseBody(headers http.Header, reader *bufio.Reader) (io.ReadCloser, int64,
 
 	return http.NoBody, 0, nil
 }
+
+// Todo: checking if the 400 works general testing!!
+// github login ssh

@@ -38,7 +38,7 @@ func (r *Response) Write(data []byte) (n int, err error) {
 }
 
 func (r *Response) WriteHeader(statusCode int) {
-	if !r.wroteHeader {
+	if r.wroteHeader {
 		return
 	}
 	r.status = statusCode
@@ -52,10 +52,20 @@ func (r *Response) writeHeaderBlock() error {
 		text = "Unknown"
 	}
 
+	if _, err := fmt.Fprintf(r.writer, "HTTP/1.1 %d %s\r\n", r.status, text); err != nil {
+		return err
+	}
+
 	for key, values := range r.header {
 		for _, val := range values {
-			fmt.Fprintf(r.writer, "%s: %s\r\n", key, val)
+			if _, err := fmt.Fprintf(r.writer, "%s: %s\r\n", key, val); err != nil {
+				return err
+			}
 		}
+	}
+
+	if _, err := fmt.Fprintf(r.writer, "\r\n"); err != nil {
+		return err
 	}
 
 	return nil

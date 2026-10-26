@@ -31,10 +31,10 @@ func ListenAndServe(addr string, handler http.Handler) error {
 
 		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 
-		go func(c net.Conn) {
+		go func(conn net.Conn) {
 			defer cancel()
-			defer c.Close()
-			HandleConnection(ctx, c, handler)
+			defer conn.Close()
+			HandleConnection(ctx, conn, handler)
 		}(conn)
 	}
 }
