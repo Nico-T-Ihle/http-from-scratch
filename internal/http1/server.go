@@ -40,7 +40,6 @@ func ListenAndServe(addr string, handler http.Handler) error {
 }
 
 func HandleConnection(ctx context.Context, conn net.Conn, mux http.Handler) error {
-	// i think i need to add a loop or something like this?!
 	defer conn.Close()
 
 	reqCtx, cancel := context.WithCancel(ctx)

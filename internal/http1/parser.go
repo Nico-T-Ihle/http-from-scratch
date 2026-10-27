@@ -99,6 +99,7 @@ func headerReader(reader *bufio.Reader, headers http.Header) (*http.Request, err
 func parseBody(headers http.Header, reader *bufio.Reader) (io.ReadCloser, int64, error) {
 
 	transferEncoding := headers.Get("Transfer-Encoding")
+	println("transferEncoding:", transferEncoding)
 	contentLengthStr := headers.Get("Content-Length")
 
 	if contentLengthStr != "" && transferEncoding != "" {
@@ -106,6 +107,7 @@ func parseBody(headers http.Header, reader *bufio.Reader) (io.ReadCloser, int64,
 	}
 
 	if strings.EqualFold(transferEncoding, "chunked") {
+		// TODO: need to return some how an error to response the 501!
 		return nil, 0, fmt.Errorf("501 Not Implemented")
 	} else if len(contentLengthStr) > 0 {
 		contentLengthIntValue, err := strconv.Atoi(contentLengthStr)
