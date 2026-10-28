@@ -30,8 +30,10 @@ package http1
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
+	"httpServer/internal/mux1"
 	"io"
 	"net"
 	"net/http"
@@ -257,8 +259,9 @@ const testTimeout = 2 * time.Second
 // returns a handle for the other end. The HandleConnection error is captured
 // in errCh (a panic is converted into an error so the suite fails cleanly
 // while the server is still unimplemented).
-func newServerTest(t *testing.T, mux http.Handler) *serverTest {
+func newServerTest(t *testing.T, mux *mux1.ServeMux) *serverTest {
 	t.Helper()
+	ctx, cancel := context.WithCancel(context.Background())
 	client, server := newMemPipe()
 	errCh := make(chan error, 1)
 	go func() {
@@ -267,11 +270,12 @@ func newServerTest(t *testing.T, mux http.Handler) *serverTest {
 			// blocked into an immediate EOF, so a panicked or otherwise
 			// exited server can never hang the test suite.
 			server.Close()
+			cancel()
 			if r := recover(); r != nil {
 				errCh <- fmt.Errorf("HandleConnection panicked: %v", r)
 			}
 		}()
-		errCh <- HandleConnection(server, mux)
+		errCh <- HandleConnection(ctx, server, mux)
 	}()
 	st := &serverTest{
 		t:       t,
@@ -393,8 +397,10 @@ func (st *serverTest) closeClient() {
 // newTestHandler returns an http.Handler whose responses are derived from the
 // parsed request, so asserting on the response also asserts that the server
 // parsed the request correctly.
-func newTestHandler() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func newTestHandler() *mux1.ServeMux {
+
+	router := mux1.NewServerMux()
+	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case r.URL.Path == "/hello":
 			_, _ = w.Write([]byte("hello"))
@@ -418,6 +424,31 @@ func newTestHandler() http.Handler {
 			http.NotFound(w, r)
 		}
 	})
+	return router
+	//return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	//	switch {
+	//	case r.URL.Path == "/hello":
+	//		_, _ = w.Write([]byte("hello"))
+	//	case r.URL.Path == "/echo":
+	//		_, _ = io.Copy(w, r.Body)
+	//	case r.URL.Path == "/upper":
+	//		b, _ := io.ReadAll(r.Body)
+	//		_, _ = w.Write([]byte(strings.ToUpper(string(b))))
+	//	case r.URL.Path == "/headers":
+	//		w.Header().Set("X-Test", "yes")
+	//		_, _ = w.Write([]byte("headers set"))
+	//	case strings.HasPrefix(r.URL.Path, "/status/"):
+	//		code, err := strconv.Atoi(strings.TrimPrefix(r.URL.Path, "/status/"))
+	//		if err != nil {
+	//			http.NotFound(w, r)
+	//			return
+	//		}
+	//		w.WriteHeader(code)
+	//		_, _ = fmt.Fprintf(w, "status %d", code)
+	//	default:
+	//		http.NotFound(w, r)
+	//	}
+	//})
 }
 
 // ---------------------------------------------------------------------------
