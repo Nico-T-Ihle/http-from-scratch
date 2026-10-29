@@ -7,7 +7,7 @@ import (
 	"sync"
 )
 
-// TODO: the differences with post get delete etc.
+// TODO: the differences with post get delete etc.!?
 
 type ServeMux struct {
 	mux    sync.RWMutex            // so that only on can use it at the time if i understood it correctly
@@ -80,6 +80,9 @@ func (m *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("404 page not found\n"))
 		return
 	}
-
 	handler.ServeHTTP(w, r)
 }
+
+// do i need those?
+func (m *ServeMux) Post() {}
+func (m *ServeMux) Get()  {}

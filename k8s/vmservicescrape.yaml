@@ -1,0 +1,19 @@
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMServiceScrape
+metadata:
+  name: http-server-scrape
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/instance: vm-stack
+    release: vm-stack
+spec:
+  namespaceSelector:
+    matchNames:
+      - default
+  selector:
+    matchLabels:
+      app: http-server
+  endpoints:
+    - port: http-server
+      path: /metrics
+      interval: 10s

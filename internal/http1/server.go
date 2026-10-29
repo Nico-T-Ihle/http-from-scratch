@@ -58,8 +58,7 @@ func HandleConnection(ctx context.Context, conn net.Conn, mux *mux1.ServeMux) er
 			}
 
 			statusCode := http.StatusBadRequest
-			var httpErr *HTTPError
-			if errors.As(err, &httpErr) {
+			if httpErr, ok := errors.AsType[*HTTPError](err); ok {
 				statusCode = httpErr.StatusCode
 			}
 
